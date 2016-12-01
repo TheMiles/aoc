@@ -22,7 +22,11 @@ class Santa(object):
         self.dir = (self.dir + (-1 if d=='L' else 1)) % 4
 
     def walk(self,distance):
-        self.pos = tuple([ x[0] + int(distance) * x[1] for x in zip(self.pos, self.directions[self.dir])])
+        l = []
+        for i in range(int(distance)):
+            self.pos = tuple([ x[0] + x[1] for x in zip(self.pos, self.directions[self.dir])])
+            l.append(self.pos)
+        return l
 
 args = parser.parse_args()
 print(args.directions)
