@@ -35,13 +35,19 @@ commands = [ x.strip() for x in args.directions[0].split(',') ]
 print(commands)
 
 s = Santa()
+visited = []
 
 for c in commands:
     r = c[0]
     w = c[1:]
     s.change_direction(r)
-    s.walk(w)
+    l = s.walk(w)
     print("Santa gets command {0}-{1}, is now at {2} and faces {3}, current distance {4}".format(r,w,s.pos,s.dir, (abs(s.pos[0])+ abs(s.pos[1]))))
+
+    for p in l:
+        if p in visited:
+            print("Visited again {0} with distance {1}".format(p, abs(p[0])+abs(p[1])))
+    visited.extend(l)
 
 
 
