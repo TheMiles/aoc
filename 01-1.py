@@ -7,26 +7,22 @@ parser.add_argument('directions', metavar='dir', type=str, nargs=1,
                     help='directions to bunny HQ')
 
 class Santa(object):
+    directions = [
+    ( 1, 0), #N
+    ( 0, 1), #E
+    (-1, 0), #S
+    ( 0,-1)  #W
+    ]
+
     def __init__(self):
-        self.dir=(1,0)
+        self.dir=0
         self.pos=(0,0)
 
     def change_direction(self,d):
-        if self.dir == ( 1, 0):
-            self.dir = (0,1) if d == 'R' else (0,-1)
+        self.dir = (self.dir + (-1 if d=='L' else 1)) % 4
 
-        elif self.dir == ( 0, 1):
-            self.dir = (-1,0) if d == 'R' else (1,0)
-
-        elif self.dir == (-1, 0):
-            self.dir = (0,-1) if d == 'R' else (0,1)
-
-        elif self.dir == ( 0,-1):
-            self.dir = (1,0) if d == 'R' else (-1,0)
-
-    def walk(self,d):
-        self.pos = (self.pos[0] + int(d) * self.dir[0], self.pos[1] + int(d) * self.dir[1] )
-
+    def walk(self,distance):
+        self.pos = tuple([ x[0] + int(distance) * x[1] for x in zip(self.pos, self.directions[self.dir])])
 
 args = parser.parse_args()
 print(args.directions)
