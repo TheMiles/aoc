@@ -35,9 +35,10 @@ def is_real_room(counts, checksum):
 sum_of_room_sectors = 0
 
 for l in [ x.strip() for x in args.file]:
-	elements = l.split('-')
-	letters  = str().join(elements[:-1])
-	tail     = elements[-1].split('[')
+	elements = l.rsplit('-',1)
+	chiffre  = elements[0]
+	letters  = str().join(chiffre.split('-'))
+	tail     = elements[1].split('[')
 	sectorID = int(tail[0])
 	checksum = tail[1][:-1]
 
