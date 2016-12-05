@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
-import md5
+import hashlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', type=argparse.FileType('r'),
@@ -14,7 +14,8 @@ for l in [ x.strip() for x in args.file]:
 	i = -1
 	while len(password) < 8:
 		i += 1
-		m = md5.new(l + str(i))
+		data = (l + str(i)).encode('utf-8')
+		m = hashlib.md5(data)
 		d = m.hexdigest()
 		if d[:5] == '00000':
 			password += d[5]
