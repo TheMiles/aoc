@@ -9,9 +9,12 @@ parser.add_argument('file', type=argparse.FileType('r'),
 
 args = parser.parse_args()
 
-
+number_of_lines = 0
 histogram = []
 for l in [ x.strip() for x in args.file]:
+
+	number_of_lines += 1
+	
 	if len(histogram) < len(l):
 		histogram.extend([{} for _ in range(len(l)-len(histogram))])
 
@@ -21,14 +24,14 @@ for l in [ x.strip() for x in args.file]:
 
 cleartext = ''
 for d in histogram:
-	max_number = 0;
-	max_char   = '-'
+	min_number = number_of_lines;
+	min_char   = '-'
 	for key, value in d.items():
-		if value > max_number:
-			max_number = value
-			max_char   = key
+		if value < min_number:
+			min_number = value
+			min_char   = key
 
-	cleartext += max_char
+	cleartext += min_char
 
 print(cleartext)
 
