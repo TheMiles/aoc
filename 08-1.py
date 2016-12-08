@@ -9,9 +9,20 @@ parser.add_argument('file', type=argparse.FileType('r'),
 
 args = parser.parse_args()
 
-width = 50
-height = 6
+class Field(object):
+    self.ON     = '#'
+    self.OFF    = '.'
 
-field = [.] * width * height
+    def __init__(self, width=50, height=6)
+        self.width = width
+        self.height = height
+        self.field = [OFF] * width * height
 
-print(field)
+    def __str__(self):
+
+        value = ''
+        return value
+
+
+f = Field()
+print(f)
