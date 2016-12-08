@@ -9,20 +9,21 @@ parser.add_argument('file', type=argparse.FileType('r'),
 
 args = parser.parse_args()
 
-abbaRegEx  = re.compile(r"(\w)(\w)\2\1")
+abaRegEx  = re.compile(r"(?=(\w)(\w)\1)")
 countSupport = 0
 
 for l in [ x.strip() for x in args.file]:
 
+    foundAbas = [[],[]]
     l = l.replace(']','[')
     groups = l.split("[")
-    foundAbbas = [0,0]
 
     for i,g in enumerate(groups):
-        abbasMatches = [ x for x in abbaRegEx.findall(g) if x[0] != x[1] ]
-        foundAbbas[i%2] += 1 if (len(abbasMatches)>0) else 0
+        foundAbas[i%2].extend( [ x for x in abaRegEx.findall(g) if x[0] != x[1] ] )
 
-    tlsSupported = foundAbbas[0] > 0 and foundAbbas[1] == 0
-    countSupport += 1 if tlsSupported else 0
+    supportsSSL = False
+    for aba in foundAbas[0]:
+        supportsSSL |= (aba[1],aba[0]) in foundAbas[1]
 
+    countSupport += 1 if supportsSSL else 0
 print(countSupport)
