@@ -6,6 +6,7 @@ import re
 parser = argparse.ArgumentParser()
 parser.add_argument('file', type=argparse.FileType('r'),
                     help='the input file')
+parser.add_argument('-r', '--recursive', action='store_true', help='use recursive parsing')
 
 args = parser.parse_args()
 
@@ -26,13 +27,10 @@ def read_marker(l,i):
         i += 1
     return i+1, [int(x) for x in data]
 
-
-for l in [ x.strip() for x in args.file]:
+def parse(l):
     out = ''
     i = 0
     while i < len(l):
-        c = l[i]
-
         if l[i] == '(':
             i, [length,repitions] = read_marker(l,i)
             out += l[i:i+length] * repitions
@@ -40,8 +38,15 @@ for l in [ x.strip() for x in args.file]:
         else:
             out += l[i]
             i+=1
+    return out
+
+for l in [ x.strip() for x in args.file]:
+    out = parse(l)
+    if args.recursive:
+        while '(' in out:
+            out = parse(out)
     count_length += len(out)
-    print(l,out, len(out))
+    print(l, len(out))
 
 print(count_length)
 
