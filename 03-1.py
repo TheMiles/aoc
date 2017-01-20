@@ -15,16 +15,23 @@ def is_possible_triangle(l):
 	return sum(l[:-1]) > l[-1]
 
 
-
+triangles = [[] for x in range(3)]
 count_good = 0
 count_total = 0
 
-for line in args.file.readlines():
-	triangle = [ int(x) for x in line.strip().split()]
-	if len(triangle) != 3:
+for lnumber,data in enumerate(args.file.readlines()):
+	line = [ int(x) for x in data.strip().split()]
+	if len(line) != 3:
 		raise ValueError('Wrong number of entries in a line')
-	if is_possible_triangle(triangle):
-		count_good += 1
-	count_total += 1
+	
+	for i,d in enumerate(line):
+		triangles[i].append(d)
+
+	if lnumber%3 == 2:
+		for t in triangles:
+			if is_possible_triangle(t):
+				count_good += 1
+			count_total += 1
+			del t[:]
 
 print("Found {0} triangles, and {1} are possible".format(count_total,count_good))
