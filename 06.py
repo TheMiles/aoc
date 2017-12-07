@@ -31,6 +31,8 @@ while memory not in history:
     count += 1
     memory = reallocateMemory(memory)
 
+loop = history[::-1].index(memory) + 1
+
 history.append(memory)
 print(history)
-print("It took {0} reallocations".format(count))
+print("It took {0} reallocations, the loop length is {1}".format(count, loop))
