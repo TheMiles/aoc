@@ -24,7 +24,7 @@ print(strJumpOffsets(pointer, offsets))
 while pointer < length:
     count += 1
     nextPointer = pointer + offsets[pointer]
-    offsets[pointer] += 1
+    offsets[pointer] += 1 if offsets[pointer] < 3 else -1
     pointer = nextPointer
 
 print(strJumpOffsets(pointer,offsets))
