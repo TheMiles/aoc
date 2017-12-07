@@ -16,7 +16,9 @@ args = parser.parse_args()
 countValid = 0
 lines = [ x.strip() for x in args.input.readlines() ]
 for l in lines:
-    words = l.split()
+    words = [ ''.join(sorted(x)) for x in  l.split() ]
+
+    # print(words)
 
     isValid = True
     for i in range(len(words)):
