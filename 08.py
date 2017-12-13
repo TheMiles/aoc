@@ -28,6 +28,8 @@ registers = defaultdict(lambda: 0)
 
 lines = [ x.strip() for x in args.input.readlines() ]
 
+biggestValueEverSeen =0
+
 for l in lines:
     m = splitCommand.match(l)
 
@@ -45,4 +47,8 @@ for l in lines:
     if comparison[conditionComparator](registers[conditionRegister], conditionValue):
         registers[targetRegister] = operations[opcode](registers[targetRegister], operand)
 
-print("The largest value is", max(registers.values()))
+    mv = max(registers.values())
+    if mv > biggestValueEverSeen:
+        biggestValueEverSeen = mv
+
+print("The largest value is", max(registers.values()),"during the process it was",biggestValueEverSeen)
