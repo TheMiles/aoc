@@ -9,8 +9,10 @@ parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
 
 args = parser.parse_args()
 
-def increment(s):
+def default(s):
         s.i += 1
+        if s.garbage:
+            s.countGarbage += 1
         return s
 
 def closeGarbage(s):
@@ -20,6 +22,8 @@ def closeGarbage(s):
 
 def openGarbage(s):
         s.i += 1
+        if s.garbage:
+            s.countGarbage += 1
         s.garbage = True
         return s
 
@@ -27,6 +31,8 @@ def openGroup(s):
         s.i += 1
         if not s.garbage:
             s.score += 1
+        else:
+            s.countGarbage += 1
         return s
 
 def closeGroup(s):
@@ -34,13 +40,15 @@ def closeGroup(s):
         if not s.garbage:
             s.totalscore += s.score
             s.score      += -1
+        else:
+            s.countGarbage += 1
         return s
 
 def escapeChar(s):
         s.i += 2
         return s
 
-parseChar = defaultdict( lambda: increment )
+parseChar = defaultdict( lambda: default )
 parseChar['>'] = closeGarbage
 parseChar['<'] = openGarbage
 parseChar['{'] = openGroup
@@ -51,10 +59,11 @@ parseChar['!'] = escapeChar
 class State(object):
 
     def __init__(self):
-        self.i          = 0
-        self.score      = 0
-        self.totalscore = 0
-        self.garbage    = False
+        self.i            = 0
+        self.score        = 0
+        self.totalscore   = 0
+        self.countGarbage = 0
+        self.garbage      = False
 
 
 lines = [ x.strip() for x in args.input.readlines() ]
@@ -62,10 +71,7 @@ lines = [ x.strip() for x in args.input.readlines() ]
 for l in lines:
     s = State()
     while s.i < len(l):
-        # f = parseChar[l[s.i]]
-        # s = f(s)
         c = l[s.i]
         s = parseChar[l[s.i]](s)
-        # print(c,s.i,s.score,s.totalscore,s.garbage)
 
-    print("Total score",s.totalscore)
+    print("Total score",s.totalscore,"garbage chars",s.countGarbage)
