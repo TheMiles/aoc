@@ -48,4 +48,4 @@ for line in lines:
 
 g,_ = findAllGraphContaining(graphs,0)
 assert(len(g)==1)
-print("There are {0} programs in the list containing 0".format(len(g[0])))
+print("There are {0} programs in the list containing 0. There are {1} groups".format(len(g[0]),len(graphs)))
