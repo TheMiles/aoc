@@ -25,9 +25,13 @@ for line in lines:
     directions = [ x.strip() for x in line.split(',') ]
 
     pos = (0,0,0)
+    maxDistance = 0
 
     for d in directions:
         m = move[d]
         pos = (pos[0]+m[0], pos[1]+m[1], pos[2]+m[2])
+        distance = distanceHex(pos, (0,0,0))
+        if distance > maxDistance:
+            maxDistance = distance
 
-    print("End position is", pos, "which is distance",distanceHex(pos, (0,0,0)))
+    print("End position is", pos, "which is distance",distanceHex(pos, (0,0,0)), "highest distance was", maxDistance)
