@@ -22,8 +22,8 @@ class Scanner(object):
             self.direction = 1
 
 class Santa(object):
-    def __init__(self, startTime, position):
-        self.startTime  = startTime
+    def __init__(self, start_time, position):
+        self.start_time  = start_time
         self.layer      = -1
         self.position   = position
         self.caughtList = []
@@ -60,19 +60,29 @@ args = parser.parse_args()
 lines = [ x.strip() for x in args.input.readlines() ]
 
 layers = []
+santas = []
 number_of_layers = 0
 for line in lines:
     layer_info = [ int(x.strip()) for x in line.split(":") ]
     layers.append(Scanner(layer_info[0],layer_info[1]))
     if number_of_layers < layer_info[0]: number_of_layers = layer_info[0]
 
-s = Santa(0,0)
+waiting_time = None
+start_time = 0
 
-while s.layer <= number_of_layers:
+while not waiting_time:
+    santas.append(Santa(start_time,0))
+    start_time += 1
 
-    s.advance()
-    checkCollision(layers, s)
+    for x in santas:
+        x.advance()
+        if x.layer > number_of_layers:
+            if not x.caughtList:
+                waiting_time = x.start_time
+                break
+            santas.remove(x)
+
+    checkCollision(layers, santas)
     for x in layers: x.advance()
 
-
-print(s.severity())
+print(waiting_time)
