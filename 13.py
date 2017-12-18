@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+import time
 
 parser = argparse.ArgumentParser(description='Advent of code')
 parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
@@ -70,6 +71,9 @@ for line in lines:
 waiting_time = None
 start_time = 0
 
+search_time = time.time()
+notification_time = search_time
+
 while not waiting_time:
     santas.append(Santa(start_time,0))
     start_time += 1
@@ -77,12 +81,20 @@ while not waiting_time:
     for x in santas:
         x.advance()
         if x.layer > number_of_layers:
-            if not x.caughtList:
-                waiting_time = x.start_time
-                break
-            santas.remove(x)
+            waiting_time = x.start_time
+            break
 
     checkCollision(layers, santas)
+
+    for x in santas:
+        if x.caughtList:
+            santas.remove(x)
+
     for x in layers: x.advance()
 
-print(waiting_time)
+
+    if (time.time() - notification_time) > 10:
+        print("Still alive, running for {1} seconds, checking {0}".format(start_time, int(time.time() - search_time)))
+        notification_time = time.time()
+
+print("You should wait", waiting_time, "picoseconds")
