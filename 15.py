@@ -10,13 +10,18 @@ def getArguments():
 
 
 class Generator(object):
-    def __init__(self,factor,initialValue):
-        self.factor  = int(factor)
-        self.value   = int(initialValue)
-        self.divisor = 2147483647
+    def __init__(self,factor,initialValue, criteria):
+        self.factor   = int(factor)
+        self.value    = int(initialValue)
+        self.divisor  = 2147483647
+        self.criteria = criteria
 
     def getNextValue(self):
-        self.value = (self.value * self.factor) % self.divisor
+        while True:
+            self.value = (self.value * self.factor) % self.divisor
+            if self.criteria(self.value):
+                break
+
         return self.value
 
 def getBin(v):
@@ -26,8 +31,8 @@ if __name__ == '__main__':
     args = getArguments()
 
     lines = [ x.strip().split()[-1] for x in args.input.readlines() ]
-    a = Generator(16807,lines[0])
-    b = Generator(48271,lines[1])
+    a = Generator(16807,lines[0], lambda x: x % 4 == 0)
+    b = Generator(48271,lines[1], lambda x: x % 8 == 0)
 
     matching_results = 0
     for i in range(args.range):
