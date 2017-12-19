@@ -4,12 +4,12 @@ import argparse
 import re
 from collections import defaultdict
 
-parser = argparse.ArgumentParser(description='Advent of code')
-parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
-parser.add_argument('-s','--size', type=int, default=256)
-parser.add_argument('-r','--rounds', type=int, default=64)
-
-args = parser.parse_args()
+def getArguments():
+    parser = argparse.ArgumentParser(description='Advent of code')
+    parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
+    parser.add_argument('-s','--size', type=int, default=256)
+    parser.add_argument('-r','--rounds', type=int, default=64)
+    return parser.parse_args()
 
 def getHex(v):
     if type(v) is str or type(v) is list:
@@ -67,13 +67,16 @@ def densifyHash(v):
 
     return denseHash
 
-lines = [ x.strip() for x in args.input.readlines() ]
+if __name__ == '__main__':
+    args = getArguments()
 
-for line in lines:
+    lines = [ x.strip() for x in args.input.readlines() ]
 
-    sparseHash = getSparseHash(args.size, args.rounds, line)
-    denseHash  = densifyHash(sparseHash)
+    for line in lines:
 
-    print(getHex(denseHash))
+        sparseHash = getSparseHash(args.size, args.rounds, line)
+        denseHash  = densifyHash(sparseHash)
+
+        print(getHex(denseHash))
 
 # print("The product of the first ot elements is", circle[0] * circle[1])
