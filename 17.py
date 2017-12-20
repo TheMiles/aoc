@@ -39,15 +39,28 @@ class CircularBuffer(object):
 
         return self.buffer[read_position]
 
+class TruncatedCircularBuffer(CircularBuffer):
+    def __init__(self, max_length):
+        CircularBuffer.__init__(self)
+        self.max_length = max_length
+
+    def insert(self,value):
+        self.position += 1
+        self.length   += 1
+
+        if self.position < self.max_length:
+            self.buffer = (self.buffer[:self.position] + [value] + self.buffer[self.position:])[:self.max_length]
+
+
 
 if __name__ == '__main__':
     args = getArguments()
 
-    b = CircularBuffer()
+    b = TruncatedCircularBuffer(2)
 
     for v in range(1,args.range):
         b.advance(args.steps)
         b.insert(v)
 
-    print("The next element is", b.getNextElement())
+    print("The second element is", b.getNextElement(0))
 
