@@ -99,16 +99,18 @@ if __name__ == '__main__':
     start = findEntrance(field)
 
     w = WalkingProgram(start[0],start[1],start[2])
+    count = 2
 
     # print(w)
     while w.walk(field):
+        count += 1
         # print(w)
         # input("Press Enter to continue...")
         pass
 
     # print(w)
 
-    print("Found:","".join(w.collection))
+    print("Found:","".join(w.collection),"after", count, "steps")
 
 
 
