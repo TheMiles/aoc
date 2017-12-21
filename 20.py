@@ -3,6 +3,7 @@
 import argparse
 import re
 import math
+from collections import defaultdict
 
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
@@ -54,8 +55,23 @@ class Particle(object):
         oldDist  = self.distance()
         self.vel = [ sum(x) for x in zip(self.vel, self.acc) ]
         self.pos = [ sum(x) for x in zip(self.pos, self.vel) ]
-        self.speedIsIncreasing = self.speed() > oldSpeed
-        self.isRunningAway     = self.distance() > oldDist
+        self.speedIsIncreasing = self.speed() >= oldSpeed
+        self.isRunningAway     = self.distance() >= oldDist
+
+def removeCollisions(p):
+    particles = p[:]
+    collisions = defaultdict(lambda: [])
+    for i,x in enumerate(particles):
+        collisions[str(x.pos)].append(i)
+
+    remove_indices = []
+    for values in collisions.values():
+        if len(values) > 1:
+            remove_indices.extend(values)
+    remove_indices.sort(reverse=True)
+    for i in remove_indices:
+        del particles[i]
+    return particles
 
 
 if __name__ == '__main__':
@@ -66,6 +82,6 @@ if __name__ == '__main__':
     while any([ not x.speedIsIncreasing or not x.isRunningAway for x in particles ]):
         for x in particles:
             x.tick()
+        particles = removeCollisions(particles)
 
-    particles = sorted(particles, key=lambda x: x.acceleration())
-    print(particles[0])
+    print(len(particles))
