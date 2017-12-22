@@ -24,10 +24,10 @@ class Virus(object):
     }
 
     turn_direction = {
-        's':['e','w'],
-        'n':['w','e'],
-        'e':['n','s'],
-        'w':['s','n']
+        's':['e','w','n'],
+        'n':['w','e','s'],
+        'e':['n','s','w'],
+        'w':['s','n','e']
     }
 
 
@@ -37,7 +37,6 @@ class Virus(object):
         self.pos   = (middle,middle)
         self.dir   = 'n'
         self.count_infections = 0
-        self.count_healings   = 0
 
     def isInBounds(self):
         n_bound = self.pos[1] >= 0
@@ -66,16 +65,22 @@ class Virus(object):
         return self.getValue() == '.'
 
     def toggleCurrentCell(self):
-        is_clean = self.isCurrentCellClean()
-        if is_clean:
-            self.count_infections += 1
-        else:
-            self.count_healings   += 1
+        v = self.getValue()
 
-        self.setValue('#' if is_clean else '.')
+        if   v == '.': self.setValue('W')
+        elif v == '#': self.setValue('F')
+        elif v == 'F': self.setValue('.')
+        elif v == 'W':
+            self.setValue('#')
+            self.count_infections += 1
 
     def getNextDirection(self):
-        return self.turn_direction[self.dir][ 0 if self.isCurrentCellClean() else 1 ]
+        v = self.getValue()
+
+        if   v == '.': return self.turn_direction[self.dir][0]
+        elif v == '#': return self.turn_direction[self.dir][1]
+        elif v == 'F': return self.turn_direction[self.dir][2]
+        elif v == 'W': return self.dir
 
     def move(self):
         m = self.movement[self.dir];
