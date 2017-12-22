@@ -108,7 +108,7 @@ if __name__ == '__main__':
     for _ in range(args.iterations):
         split = splitField(field)
         field = growFields(split,rules)
-        printField(field)
-        input("Press enter....")
+        # printField(field)
+        # input("Press enter....")
 
     print("There are", countElements(field,'#'),"elements set")
