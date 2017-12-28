@@ -63,8 +63,12 @@ if __name__ == '__main__':
 
     b = getBridgePossibilities(components,[],0)
 
+    l = max([ len(x) for x in b ])
+    b = [ x for x in b if len(x)>=l ]
+
     w = ""
     s = 0
+
     
     for x in b:
         m = ""
