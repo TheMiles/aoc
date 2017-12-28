@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 enum RegNames {
 	a = 0,
@@ -13,14 +14,43 @@ enum RegNames {
 
 using RegisterType = unsigned int;
 
+bool isPrime(RegisterType n)
+{
+	if (n <= 1) return false;
+	if (n <= 3) return true;
+	if (n % 2 == 0 || n % 3 == 0) return false;
+	// if (static_cast<RegisterType>(std::pow(2.f,static_cast<float>(n-1))) % n != 1) return false;
+
+	RegisterType i = 5;
+
+	while (i * i <= n)
+	{
+		if (n % i == 0 || n % (i+2) == 0) return false;
+		i += 6;
+	}
+
+	return true;
+}
+
+RegisterType countNotPrimes(RegisterType begin, RegisterType end)
+{
+	RegisterType count = 0;
+	for(RegisterType n=begin; n <= end; n += 17)
+	{
+		if(!isPrime(n))
+			++count;
+	}
+	return count;
+}
+
+
 void program(RegisterType* r)
 {
 	r[b] = 79;
 	r[c] = r[b];
 	if(r[a]!=0)
 	{
-		r[b] *= 100;
-		r[b] += 100000;
+		r[b] = 107900;
 		r[c] = r[b] + 17000;
 	}
 
@@ -36,16 +66,14 @@ void program(RegisterType* r)
 	if(r[b]==r[d]*r[e])
 		r[f] = 0;
 
-	r[e] += 1;
-	if(r[b] != r[e])
+	if(r[b] != ++r[e])
 		goto maeh;
 
-	r[d] += 1;
-	if(r[b] != r[d])
+	if(r[b] != ++r[d])
 		goto mooh;
 
 	if(r[f]==0)
-		r[h] += 1;
+		++r[h];
 
 	if(r[b] == r[c])
 		return;
@@ -66,9 +94,11 @@ void printRegisters(RegisterType* r)
 
 int main(int,char**)
 {
-	RegisterType r[8]={0,0,0,0,0,0,0,0};
-	printRegisters(r);
-	program(r);
-	printRegisters(r);
+	RegisterType r[8]={1,0,0,0,0,0,0,0};
+	// printRegisters(r);
+	// program(r);
+	// printRegisters(r);
+	RegisterType h = countNotPrimes(107900,124900);
+	std::cout << "register H has entry " << h << std::endl;
 	return 0;
 }
