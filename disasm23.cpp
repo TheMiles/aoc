@@ -15,46 +15,39 @@ using RegisterType = unsigned int;
 
 void program(RegisterType* r)
 {
-
 	r[b] = 79;
 	r[c] = r[b];
 	if(r[a]!=0)
 	{
 		r[b] *= 100;
 		r[b] += 100000;
-		r[c] = r[b];
-		r[c] += 17000;
+		r[c] = r[b] + 17000;
 	}
+
 	meow:
 	r[f] = 1;
 	r[d] = 2;
+
 	mooh:
 	r[e] = 2;
+
 	maeh:
-	r[g] = r[d];
-	r[g] *= r[e];
-	r[g] -= r[b];
-	if(r[g]==0)
+
+	if(r[b]==r[d]*r[e])
 		r[f] = 0;
 
 	r[e] += 1;
-	r[g] = r[e];
-	r[g] -= r[b];
-	if(r[g]!=0)
+	if(r[b] != r[e])
 		goto maeh;
 
 	r[d] += 1;
-	r[g] = r[d];
-	r[g] -= r[b];
-	if(r[g] != 0)
+	if(r[b] != r[d])
 		goto mooh;
 
 	if(r[f]==0)
 		r[h] += 1;
 
-	r[g] = r[b];
-	r[g] -= r[c];
-	if(r[g] == 0)
+	if(r[b] == r[c])
 		return;
 
 	r[b] += 17;
