@@ -83,12 +83,16 @@ if __name__ == '__main__':
 
         claims.append((id, Rect(l, t, l+w, t+h)))
 
-    collisions = set()
+    collisions   = set()
+    collidingIds = set()
     for i,c in enumerate(claims):
         for j, d in enumerate(claims[i+1:]):
             overlapRect = c[1].overlap(d[1])
             if overlapRect:
+                collidingIds.add(c[0])
+                collidingIds.add(d[0])
                 collisions.update(overlapRect.occupiedList())
 
-    print(collisions)
-    print(len(collisions))
+    spare = [ x[0] for x in claims if x[0] not in collidingIds ]
+
+    print("Colliding space {0} spares {1}".format(len(collisions), spare))
