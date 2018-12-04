@@ -112,3 +112,12 @@ if __name__ == '__main__':
     sleepingMinutes     = { e : getNumOccurrances(sleeppattern[e])[sleepingFrequencies[e]][0] for e in sleeppattern }
 
     print("Longest sleeping elve is {0} with time {1}. Sleeping most often ({2} times) at minute {3}. So the result is {4}".format(sleepiestElve, sleepTimes[sleepiestElve], sleepingFrequencies[sleepiestElve], sleepingMinutes[sleepiestElve], int(sleepiestElve) * sleepingMinutes[sleepiestElve]))
+
+    mostOftenSleepingElve = None
+    sleepFrequency        = 0
+    for e,f in sleepingFrequencies.items():
+        if f > sleepFrequency:
+            sleepFrequency = f
+            mostOftenSleepingElve = e
+
+    print("Most often sleeping elve is {0} with time {1}. Sleeping most often ({2} times) at minute {3}. So the result is {4}".format(mostOftenSleepingElve, sleepTimes[mostOftenSleepingElve], sleepingFrequencies[mostOftenSleepingElve], sleepingMinutes[mostOftenSleepingElve], int(mostOftenSleepingElve) * sleepingMinutes[mostOftenSleepingElve]))
