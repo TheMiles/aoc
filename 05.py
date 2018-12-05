@@ -65,4 +65,20 @@ if __name__ == '__main__':
 
         reducedPolymers = splitAndMergePolymer(polymers)
 
-        print("Polymer is {0} long".format(len(reducedPolymers)))
+        types = list(set([ x.lower() for x in reducedPolymers ]))
+
+        cleanedPolymerLengths = dict()
+        for t in types:
+            cleanedPolymer = [ x for x in reducedPolymers if x.lower() != t ]
+            reducedCleanedPolymer = splitAndMergePolymer(cleanedPolymer)
+            cleanedPolymerLengths[t] = len(reducedCleanedPolymer)
+
+
+        shortestPolymerType = None
+        shortestPolymerLen  = len(reducedPolymers)
+        for k,v in cleanedPolymerLengths.items():
+            if v < shortestPolymerLen:
+                shortestPolymerLen = v
+                shortestPolymerType = k
+
+        print("Reduced Polymer is {0} long. By removing {1} it will be {2} long".format(len(reducedPolymers), shortestPolymerType, shortestPolymerLen))
