@@ -8,6 +8,52 @@ def getArguments():
     return parser.parse_args()
 
 
+def isReacting(p, i):
+
+    if len(p) <= 1 or i < 0 or i >= len(p)-1:
+        return False
+    return p[i].upper() == p[i+1].upper() and p[i] != p[i+1]
+
+
+def splitAndMergePolymer(p):
+
+    p              = p[:]
+    i              = 0
+    polymer_length = len(p)
+
+    if polymer_length <= 1:
+        return p
+
+    while i < polymer_length:
+        if isReacting(p, i):
+            split = i+1
+            # print("SPLIT {0}  --{3}--> {1} | {2}".format(p, p[:split-1], p[split:], split))
+            k, p = mergePolymers(p[:split], p[split:])
+            i -= k
+            polymer_length -= 2*k
+        i += 1
+
+    return p
+
+def mergePolymers(p1, p2):
+
+    if not p1:
+        # print("Merge {0} | {1} -select2-> {1}".format(p1, p2))
+        return 0, p2
+
+    if not p2:
+        # print("Merge {0} | {1} -select1-> {0}".format(p1, p2))
+        return 0, p1
+
+    if p1[-1].upper() == p2[0].upper() and p1[-1] != p2[0]:
+        # print("Merge {0} | {1} -R-> {2} | {3}".format(p1, p2, p1[:-1], p2[1:]))
+        k, p = mergePolymers(p1[:-1], p2[1:])
+        return k+1, p
+
+    # print("Merge {0} | {1} -M-> {2}".format(p1, p2, p1 + p2))
+    return 0, p1 + p2
+
+
 if __name__ == '__main__':
     args = getArguments()
     lines = list(filter(None, [ x.strip() for x in args.input.readlines() ] ))
@@ -16,14 +62,7 @@ if __name__ == '__main__':
     for line in lines:
 
         polymers = [ x for x in line ]
-        edited   = True
-        while edited:
-            edited = False
 
-            for i in range(len(polymers)-1):
-                if polymers[i].upper() == polymers[i+1].upper() and polymers[i] != polymers[i+1]:
-                    del polymers[i:i+2]
-                    edited = True
-                    break
+        reducedPolymers = splitAndMergePolymer(polymers)
 
-        print("Polymer is {0} long".format(len(polymers)))
+        print("Polymer is {0} long".format(len(reducedPolymers)))
