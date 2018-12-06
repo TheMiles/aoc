@@ -20,12 +20,21 @@ class Field(object):
         self.min      = (min([x[0] for x in self.vertices]), min([x[1] for x in self.vertices]))
         self.max      = (max([x[0] for x in self.vertices]), max([x[1] for x in self.vertices]))
         self.field    = [ (None, None) for i in range(self.w() * self.h()) ]
+        self.sumDist  = [ None for i in range(self.w() * self.h()) ]
 
         print("min {0} max {1} w {2} h {3}".format(self.min, self.max, self.w(), self.h()))
 
         for j in range(self.min[1], self.max[1]):
             for i in range(self.min[0], self.max[0]):
                 self.set((i,j), self.getSmallestDistance((i,j)))
+
+        for j in range(self.min[1], self.max[1]):
+            for i in range(self.min[0], self.max[0]):
+                sum = 0
+                for v in self.vertices:
+                    sum += self.distance((i,j), v)
+                self.sumDist[self.fieldIndex((i,j))] = sum
+
 
     def __str__(self):
 
@@ -136,6 +145,11 @@ class Field(object):
         return count
 
 
+    def countDistanceSmallerThan(self, value):
+
+        return len([x for x in self.sumDist if x is not None and x < value])
+
+
 
     def distance(self, a, b):
         return abs(b[0]-a[0]) + abs(b[1]-a[1])
@@ -154,3 +168,7 @@ if __name__ == '__main__':
     c = field.getCount()
     print("Hugest Field ", max(c.values()))
 
+    # print(field.sumDist)
+
+    print("Fields smaller 32", field.countDistanceSmallerThan(32))
+    print("Fields smaller 10000", field.countDistanceSmallerThan(10000))
