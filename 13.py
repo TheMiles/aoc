@@ -10,6 +10,7 @@ import time
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
     parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
+    parser.add_argument('-s','--step', action='store_true')
     return parser.parse_args()
 
 class Car(object):
@@ -21,6 +22,7 @@ class Car(object):
         self.y = y
         self.d = self.Directions.index(dir)
         self.crossDecision = [self.left, self.ident, self.right]
+        self.crashed = False
 
 
     def __str__(self):
@@ -89,6 +91,9 @@ class Car(object):
         f()
 
     def move(self,track):
+
+        if self.crashed:
+            return
 
         delta = [
             ( 0,-1), # '^'
@@ -171,10 +176,17 @@ def getWidthHeight(state):
 
 def printTrack(w, track, cars):
 
+    width, height = getWidthHeight(track)
+
     for i,s in enumerate(track):
         w.addstr(i,0,s)
 
     for c in cars:
+        if c.x >= width or c.y >= height or c.x < 0 or c.y < 0:
+            ff = open("bla", 'a')
+            ff.write("Problem car [{},{}] out of bounds [{},{}]\n".format(c.x,c.y,width,height))
+            ff.close
+            continue
         w.addstr(c.y, c.x, str(c))
 
     w.refresh()
@@ -189,7 +201,7 @@ def main(stdscr):
 
     curses.curs_set(0)
     statusWindow = curses.newwin(3, curses.COLS)
-    trackWindow  = curses.newwin(height, width, 3, 2)
+    trackWindow  = curses.newwin(height+1, width+1, 3, 2)
     stdscr.clear()
 
 
@@ -206,6 +218,7 @@ def main(stdscr):
 
     def updateWindows(log):
         printTrack(trackWindow, track, cars)
+        statusWindow.clear()
         statusWindow.addstr(1,0, log)
         statusWindow.refresh()
         stdscr.refresh()
@@ -214,24 +227,38 @@ def main(stdscr):
     i = 0
     running = True
     while running:
-        updateWindows("Iteration {:> 6} ".format(i))
+        updateWindows("Iteration {:> 6} remaining cars {}".format(i,len(cars)))
 
-        # k = stdscr.getkey()
-        # if k == 'q':
-        #     running = False
+        if args.step:
+            k = stdscr.getkey()
+            if k == 'q':
+                running = False
 
         i += 1
+
         for c in cars:
             c.move(track)
 
             sameCars = [d for d in cars if d == c]
             if len(sameCars) >= 2:
                 updateWindows("Iteration {:> 6} crash at coordinate [{},{}]".format(i,c.x,c.y))
-                stdscr.getkey()
-                running = False
-                break
+                # stdscr.getkey()
+                for d in sameCars:
+                    d.crashed = True
+        cars[:] = [c for c in cars if not c.crashed]
         cars.sort()
-        time.sleep(0.1)
+
+        if len(cars) == 1:
+            updateWindows("Iteration {:> 6} last remaining car at [{},{}]".format(i,cars[0].x,cars[0].y))
+            stdscr.getkey()
+            running = False
+
+        if not cars:
+            updateWindows("Iteration {:> 6} no more remaining cars".format(i))
+            stdscr.getkey()
+            running = False
+
+        time.sleep(0.01)
 
 
 
