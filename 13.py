@@ -10,7 +10,7 @@ import time
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
     parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
-    parser.add_argument('-s','--step', action='store_true')
+    parser.add_argument('-s','--step', type=int, default=0)
     return parser.parse_args()
 
 class Car(object):
@@ -90,7 +90,7 @@ class Car(object):
         self.crossDecision = self.crossDecision[1:] + [f]
         f()
 
-    def move(self,track):
+    def move(self, w, track):
 
         if self.crashed:
             return
@@ -102,9 +102,21 @@ class Car(object):
             (-1, 0)  # '<'
         ]
 
-        self.x = self.x + delta[self.d][0]
-        self.y = self.y + delta[self.d][1]
+        x = self.x + delta[self.d][0]
+        y = self.y + delta[self.d][1]
 
+        w.addstr(self.y, self.x, getTrackElement(track,self.x,self.y))
+        w.addstr(y, x, str(self))
+
+
+        if not coordinateIsInBounds(track, x, y):
+            ff = open("bla_move", 'a')
+            ff.write("Problem car [{},{}] out of bounds, old trackElement {} old coordinate [{},{}] {}\n".format(x,y,getTrackElement(track, self.x, self.y),self.x, self.y, str(self)))
+            ff.close
+
+
+        self.x = x
+        self.y = y
         t = getTrackElement(track, self.x, self.y)
 
         #  self.Directions = ['^', '>', 'v', '<']
@@ -130,6 +142,14 @@ def getTrackElement(track, x, y):
         return ' '
 
     return track[y][x]
+
+def coordinateIsInBounds(track, x, y):
+
+    if x < 0 or y < 0: return False
+
+    width, height = getWidthHeight(track)
+    if x >= width or y >= height: return False
+    return True
 
 
 car = ['^', 'v', '>', '<']
@@ -159,10 +179,20 @@ def getRealTrackElement(state,x,y):
     if trackElement not in car:
         return trackElement
 
-    upConnection    = 1 if getTrackElement(state,x,  y-1) in ['|','\\','/','+','v','^'] else 0
-    rightConnection = 2 if getTrackElement(state,x+1,y)   in ['-','\\','/','+','<','>'] else 0
-    downConnection  = 4 if getTrackElement(state,x,  y+1) in ['|','\\','/','+','v','^'] else 0
-    leftConnection  = 8 if getTrackElement(state,x-1,y)   in ['-','\\','/','+','<','>'] else 0
+    upConnection    = 1 if getTrackElement(state,x,  y-1) in ['|','+','v','^'] else 0
+    rightConnection = 2 if getTrackElement(state,x+1,y)   in ['-','+','<','>'] else 0
+    downConnection  = 4 if getTrackElement(state,x,  y+1) in ['|','+','v','^'] else 0
+    leftConnection  = 8 if getTrackElement(state,x-1,y)   in ['-','+','<','>'] else 0
+
+    upConnection    = 1 if getTrackElement(state,x,  y-1) == '\\' and getTrackElement(state, x-1, y-1) in ['-','\\','/','+','<','>'] else upConnection
+    rightConnection = 2 if getTrackElement(state,x+1,y)   == '\\' and getTrackElement(state, x+1, y+1) in ['|','\\','/','+','v','^'] else rightConnection
+    downConnection  = 4 if getTrackElement(state,x,  y+1) == '\\' and getTrackElement(state, x+1, y+1) in ['-','\\','/','+','<','>'] else downConnection
+    leftConnection  = 8 if getTrackElement(state,x-1,y)   == '\\' and getTrackElement(state, x-1, y-1) in ['|','\\','/','+','v','^'] else leftConnection
+
+    upConnection    = 1 if getTrackElement(state,x,  y-1) == '/'  and getTrackElement(state, x+1, y-1) in ['-','\\','/','+','<','>'] else upConnection
+    rightConnection = 2 if getTrackElement(state,x+1,y)   == '/'  and getTrackElement(state, x+1, y-1) in ['|','\\','/','+','v','^'] else rightConnection
+    downConnection  = 4 if getTrackElement(state,x,  y+1) == '/'  and getTrackElement(state, x-1, y+1) in ['-','\\','/','+','<','>'] else downConnection
+    leftConnection  = 8 if getTrackElement(state,x-1,y)   == '/'  and getTrackElement(state, x-1, y+1) in ['|','\\','/','+','v','^'] else leftConnection
 
     return trackConnectionMapping[upConnection + rightConnection + downConnection + leftConnection]
 
@@ -216,53 +246,52 @@ def main(stdscr):
                 cars.append(Car(x,y,c))
         track.append(''.join(l))
 
-    def updateWindows(log):
-        printTrack(trackWindow, track, cars)
-        statusWindow.clear()
-        statusWindow.addstr(1,0, log)
-        statusWindow.refresh()
-        stdscr.refresh()
-
+    printTrack(trackWindow, track, cars)
 
     i = 0
     running = True
     while running:
-        updateWindows("Iteration {:> 6} remaining cars {}".format(i,len(cars)))
+        i += 1
+        statusWindow.addstr(1,0, "Iteration {:> 6} remaining cars {}".format(i,len(cars)))
 
-        if args.step:
-            k = stdscr.getkey()
+        if args.step and i > args.step:
+            k = statusWindow.getkey()
             if k == 'q':
                 running = False
 
-        i += 1
-
         for c in cars:
-            c.move(track)
+            c.move(trackWindow, track)
 
             sameCars = [d for d in cars if d == c]
             if len(sameCars) >= 2:
-                updateWindows("Iteration {:> 6} crash at coordinate [{},{}]".format(i,c.x,c.y))
-                # stdscr.getkey()
+                statusWindow.addstr(1,0, "Iteration {:> 6} crash at coordinate [{},{}]".format(i,c.x,c.y))
+                # statusWindow.getkey()
                 for d in sameCars:
                     d.crashed = True
+
         cars[:] = [c for c in cars if not c.crashed]
         cars.sort()
 
+        offtrackCars = [c for c in cars if not coordinateIsInBounds(track,c.x,c.y)]
+        if offtrackCars:
+            statusWindow.addstr(1,0, "Iteration {:> 6}  car left at [{},{}]".format(i,offtrackCars[0].x,offtrackCars[0].y))
+            statusWindow.getkey()
+            running = False
+
+
         if len(cars) == 1:
-            updateWindows("Iteration {:> 6} last remaining car at [{},{}]".format(i,cars[0].x,cars[0].y))
-            stdscr.getkey()
+            statusWindow.addstr(1,0, "Iteration {:> 6} last remaining car at [{},{}]".format(i,cars[0].x,cars[0].y))
+            statusWindow.getkey()
             running = False
 
         if not cars:
-            updateWindows("Iteration {:> 6} no more remaining cars".format(i))
-            stdscr.getkey()
+            statusWindow.addstr(1,0, "Iteration {:> 6} no more remaining cars".format(i))
+            statusWindow.getkey()
             running = False
 
+        statusWindow.refresh()
+        trackWindow.refresh()
         time.sleep(0.01)
-
-
-
-
 
 
 
