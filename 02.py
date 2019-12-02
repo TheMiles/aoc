@@ -5,6 +5,10 @@ import argparse
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
     parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
+    parser.add_argument('-n','--noun', type=int, default=12)
+    parser.add_argument('-v','--verb', type=int, default=2)
+    parser.add_argument('-t','--target', type=int)
+
     return parser.parse_args()
 
 
@@ -53,6 +57,32 @@ if __name__ == '__main__':
     lines = list(filter(None, [ [ int(y) for y in x.strip().split(',')] for x in args.input.readlines() ] ))
 
     for p in lines:
-        c = [p[:], 0]
-        run(c)
-        print(p,c[0])
+
+        print("Trying", p)
+
+        noun = args.noun
+        verb = args.verb
+
+        if args.target:
+            nount = 0
+            verb  = 0
+
+        while True:
+            c = [p[:], 0]
+            c[0][1] = noun
+            c[0][2] = verb
+            run(c)
+
+            if(not args.target or args.target == c[0][0]):
+                break
+
+            noun += 1
+            if noun > 99:
+                verb += 1
+                if verb > 99:
+                    break
+                noun = 0
+
+
+        print(noun, verb, c[0])
+        print(100 * noun + verb)
