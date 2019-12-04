@@ -1,62 +1,56 @@
 #!/usr/bin/python3
 
 import argparse
+import numpy as np
+
 
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
     parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
-    parser.add_argument('-n','--noun', type=int, default=12)
-    parser.add_argument('-v','--verb', type=int, default=2)
-    parser.add_argument('-t','--target', type=int)
-
     return parser.parse_args()
 
 
-def add(c):
-    m  = c[0]
-    pc = c[1]
+def getSegment(d):
+    orientation, length = d[:1], d[1:]
+    change = {
+        'U': np.array([ 0, 1]),
+        'D': np.array([ 0,-1]),
+        'L': np.array([-1, 0]),
+        'R': np.array([ 1, 0])
+    }
 
-    a  = m[m[pc+1]]
-    b  = m[m[pc+2]]
-    m[m[pc+3]] = a + b
+    # print("orientation", orientation, "length", length)
+    return (change[orientation])*int(length)
 
-    c[1] = pc+4
+def getStepsSegment(a):
+    dir    = a[1]-a[0]
+    length = int(np.linalg.norm(dir))
+    dir    = (dir/length).astype(int)
 
-def mul(c):
-    m  = c[0]
-    pc = c[1]
+    return np.array([a[0]+dir*(x+1) for x in range(length)])
 
-    a  = m[m[pc+1]]
-    b  = m[m[pc+2]]
-    m[m[pc+3]] = a * b
-
-    c[1] = pc+4
-
-
-def hac(c):
-    c[1] = -1
-
-
-opcodes = {
-    1:  add,
-    2:  mul,
-    99: hac
-}
-
-
-def run(c):
-    while c[1] >= 0:
-        p  = c[0]
-        pc = c[1]
-        opcodes[p[pc]](c)
+def getSteps(a):
+    return np.concatenate([ getStepsSegment(a[i:i+2]) for i in range(len(a)-1) ])
 
 
 
 if __name__ == '__main__':
     args = getArguments()
-    lines = list(filter(None, [ [ int(y) for y in x.strip().split(',')] for x in args.input.readlines() ] ))
+    lines = list(filter(None, [ [ y for y in x.strip().split(',')] for x in args.input.readlines() ] ))
 
-    for p in lines:
+    poly = []
+    for l in lines:
 
-        print("Trying", p)
+        pg = np.array([[0,0]])
+        for d in l:
+            pg = np.append(pg, [pg[-1] + getSegment(d)],0)
 
+        poly.append(pg)
+
+    a = getSteps(poly[0])
+    b = getSteps(poly[1])
+
+    print(b)
+
+    # for i in range(len(b)-1):
+    #     getSteps(b[i:i+2])
