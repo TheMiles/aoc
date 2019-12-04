@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+from collections import defaultdict
 
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
@@ -11,6 +12,7 @@ def getArguments():
 def check(p):
     passwd = str(p)
     prev   = -1
+    mults  = defaultdict(lambda: 1)
 
     hasLength = len(passwd) == 6
     hasDouble = False
@@ -18,12 +20,14 @@ def check(p):
 
     for c in passwd:
         value = int(c)
-        if value == prev: hasDouble=True
         if value < prev:  hasRising=False
+        if value == prev:
+            hasDouble=True
+            mults[value] += 1
         prev = value
 
     # print("Password {} hasLenght {}, doubleDigits {}, isRising {}".format(passwd, hasLength, hasDouble, hasRising))
-    return hasLength and hasDouble and hasRising
+    return hasLength and hasDouble and hasRising and 2 in mults.values()
 
 
 if __name__ == '__main__':
