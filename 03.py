@@ -32,7 +32,28 @@ def getStepsSegment(a):
 def getSteps(a):
     return np.concatenate([ getStepsSegment(a[i:i+2]) for i in range(len(a)-1) ])
 
+def getSegmentPairs(a):
+    return [a[i:i+2] for i in range(len(a)-1)]
 
+def getIntersections(a,b):
+    intersections = []
+    if min(a[:,0])>max(b[:,0]) or max(a[:,0])<min(b[:,0]): return intersections
+    if min(a[:,1])>max(b[:,1]) or max(a[:,1])<min(b[:,1]): return intersections
+
+    aSteps        = getSteps(a)
+    bSteps        = getSteps(b)
+
+    for ca in aSteps:
+        for cb in bSteps:
+            if all(ca == cb):
+                intersections.append(ca)
+    return intersections
+
+def indexInCoordinates(l,needle):
+    for i in range(len(l)):
+        if all(needle == l[i]):
+            return i
+    return None
 
 if __name__ == '__main__':
     args = getArguments()
@@ -47,10 +68,33 @@ if __name__ == '__main__':
 
         poly.append(pg)
 
+    a = getSegmentPairs(poly[0])
+    b = getSegmentPairs(poly[1])
+
+    intersections = []
+    length = len(a)*len(b)
+    count  = 0
+    for pa in a:
+        for pb in b:
+            count +=1
+            # print("{}%".format(int(100*count/length)))
+            intersections.extend(getIntersections(pa,pb))
+
+    print("Number of found intersections:",len(intersections))
+
+    distances = [ sum(abs(p)) for p in intersections ]
+    print("Closest intersection has distance:",min(distances))
+
     a = getSteps(poly[0])
     b = getSteps(poly[1])
 
-    print(b)
+    distances = []
+    for i in intersections:
+        da = indexInCoordinates(a,i)+1
+        db = indexInCoordinates(b,i)+1
+        if da and db:
+            distances.append(da+db)
 
-    # for i in range(len(b)-1):
-    #     getSteps(b[i:i+2])
+    print("Shortest length:", min(distances))
+
+
