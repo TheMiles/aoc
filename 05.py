@@ -13,34 +13,29 @@ class CPU(object):
 
     def __init__(self, memory):
         self.pc         = 0
-        self.cf         = False
+        self.halted     = False
         self.memory     = memory
         self.operations = {
             1: [self.add,3],
             2: [self.mul,3],
             3: [self.input,1],
-            4: [self.output,1]
+            4: [self.output,1],
+            99:[self.hacf,0]
         }
 
-    def cycle(self):
-        if self.pc >= len(self.instructions) or self.pc < 0:
-            return False
+    def run(self):
+        while not self.halted:
+            self.cycle()
 
-        i = [ x.strip() for x in self.instructions[self.pc].split() ]
-        # print(i)
-        self.operations[i[0]](i[1:])
-        return True
+    def cycle(self):
+        self.getFunctor()()
+        self.advance()
 
     def advance(self):
         self.pc += self.getParamLength()+1
 
-    def getValue(self, x):
-        if isInt(x):
-            return int(x)
-        return self.registers[x]
-
     def getInstr(self):
-        return self.memory[pc]
+        return str(self.memory[self.pc])
 
     def getMnemo(self):
         instr = self.getInstr()
@@ -64,13 +59,14 @@ class CPU(object):
         return pm
 
     def getParameters(self):
-        params  = self.memory[pc+1:pc+1+self.getParamLength]
+        return self.memory[self.pc+1:self.pc+1+self.getParamLength()]
+
 
     def resolveParameters(self):
         params = self.getParameters()
         for i,pm in enumerate(zip(params,self.getParameterMode())):
             if pm[1] == 'p':
-                pm[0][i] = self.memory[pm[0][i]]
+                params[i] = self.memory[pm[0]]
         return params
 
     def getWriteAdress(self):
@@ -88,48 +84,15 @@ class CPU(object):
         self.memory[adr] = params[0] * params[1]
 
 
-    def hac(self):
-        c[1] = -1
+    def hacf(self):
+        self.halted = True
 
-    def set(self, operands):
-        r = operands[0]
-        v = self.getValue(operands[1])
-        self.registers[r] = v
-        self.advance()
+    def input(self):
+        value = int(input("Input needed:"))
+        self.memory[self.getWriteAdress()] = value
 
-    def sub(self, operands):
-        r = operands[0]
-        v = self.getValue(operands[1])
-        self.registers[r] -= v
-        self.advance()
-
-    def mul(self, operands):
-        r = operands[0]
-        v = self.getValue(operands[1])
-        self.registers[r] *= v
-        self.advance()
-        self.mul_counter += 1
-
-    def jnz(self, operands):
-        j = 1
-        if self.getValue(operands[0]) != 0:
-            j = self.getValue(operands[1])
-        self.pc += j
-
-
-opcodes = {
-    1:  add,
-    2:  mul,
-    99: hac
-}
-
-
-def run(c):
-    while c[1] >= 0:
-        p  = c[0]
-        pc = c[1]
-        opcodes[p[pc]](c)
-
+    def output(self):
+        print("Output:",self.resolveParameters()[0])
 
 
 if __name__ == '__main__':
@@ -140,29 +103,6 @@ if __name__ == '__main__':
 
         print("Trying", p)
 
-        noun = args.noun
-        verb = args.verb
-
-        if args.target:
-            nount = 0
-            verb  = 0
-
-        while True:
-            c = [p[:], 0]
-            c[0][1] = noun
-            c[0][2] = verb
-            run(c)
-
-            if(not args.target or args.target == c[0][0]):
-                break
-
-            noun += 1
-            if noun > 99:
-                verb += 1
-                if verb > 99:
-                    break
-                noun = 0
-
-
-        print(noun, verb, c[0])
-        print(100 * noun + verb)
+        c = CPU(p)
+        c.run()
+        print(c.memory)
