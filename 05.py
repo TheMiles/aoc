@@ -11,17 +11,15 @@ def getArguments():
 
 class CPU(object):
 
-    def __init__(self, idOfCPU, instructions):
-        self.pc           = 0
-        self.id           = idOfCPU
-        self.instructions = instructions
-        self.registers    = defaultdict(lambda: 0)
-        self.mul_counter  = 0
+    def __init__(self, memory):
+        self.pc         = 0
+        self.cf         = False
+        self.memory     = memory
         self.operations = {
-            "set": self.set,
-            "sub": self.sub,
-            "mul": self.mul,
-            "jnz": self.jnz
+            1: [self.add,3],
+            2: [self.mul,3],
+            3: [self.input,1],
+            4: [self.output,1]
         }
 
     def cycle(self):
@@ -34,12 +32,64 @@ class CPU(object):
         return True
 
     def advance(self):
-        self.pc +=1
+        self.pc += self.getParamLength()+1
 
     def getValue(self, x):
         if isInt(x):
             return int(x)
         return self.registers[x]
+
+    def getInstr(self):
+        return self.memory[pc]
+
+    def getMnemo(self):
+        instr = self.getInstr()
+        return int(instr[-2:])
+
+    def getFunctor(self):
+        return self.operations[self.getMnemo()][0]
+
+    def getParamLength(self):
+        return self.operations[self.getMnemo()][1]
+
+    def getParameterMode(self):
+        instr  = self.getInstr()
+        params = instr[:-2]
+        params = params[::-1]
+
+        pm = ['p'] * self.getParamLength()
+        for i, p in enumerate(params):
+            if p=='1':
+                pm[i]='i'
+        return pm
+
+    def getParameters(self):
+        params  = self.memory[pc+1:pc+1+self.getParamLength]
+
+    def resolveParameters(self):
+        params = self.getParameters()
+        for i,pm in enumerate(zip(params,self.getParameterMode())):
+            if pm[1] == 'p':
+                pm[0][i] = self.memory[pm[0][i]]
+        return params
+
+    def getWriteAdress(self):
+        params = self.getParameters()
+        return params[-1]
+
+    def add(self):
+        params = self.resolveParameters()
+        adr    = self.getWriteAdress()
+        self.memory[adr] = params[0] + params[1]
+
+    def mul(self):
+        params = self.resolveParameters()
+        adr    = self.getWriteAdress()
+        self.memory[adr] = params[0] * params[1]
+
+
+    def hac(self):
+        c[1] = -1
 
     def set(self, operands):
         r = operands[0]
@@ -65,34 +115,6 @@ class CPU(object):
         if self.getValue(operands[0]) != 0:
             j = self.getValue(operands[1])
         self.pc += j
-
-
-
-
-
-def add(c):
-    m  = c[0]
-    pc = c[1]
-
-    a  = m[m[pc+1]]
-    b  = m[m[pc+2]]
-    m[m[pc+3]] = a + b
-
-    c[1] = pc+4
-
-def mul(c):
-    m  = c[0]
-    pc = c[1]
-
-    a  = m[m[pc+1]]
-    b  = m[m[pc+2]]
-    m[m[pc+3]] = a * b
-
-    c[1] = pc+4
-
-
-def hac(c):
-    c[1] = -1
 
 
 opcodes = {
