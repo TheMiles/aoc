@@ -44,13 +44,17 @@ class Orbits(object):
         self.objects[child_index].parent = parent_index
         self.objects[parent_index].children.append(child_index)
 
+    def getPathForIndex(self, index):
+        path = []
+        i    = index
+        while i is not None:
+            path.append(i)
+            i = self.objects[i].parent
+        return path[::-1]
+
 
     def numberOfOrbitsForIndex(self, index):
-        num = -1
-        i   = index
-        while i is not None:
-            num += 1
-            i    = self.objects[i].parent
+        num = len(self.getPathForIndex(index))-1
         # print("Orbit number for {} is {} direct orbit of {}".format(self.objects[index].obj, num, self.objects[self.objects[index].parent].obj if self.objects[index].parent is not None else "NONE"))
         return num
 
@@ -59,6 +63,9 @@ class Orbits(object):
         for i in range(len(self.objects)):
             num += self.numberOfOrbitsForIndex(i)
         return num
+
+    def getPathForObj(self, obj):
+        return self.getPathForIndex(self.getIndex(obj))
 
 
 if __name__ == '__main__':
@@ -71,3 +78,18 @@ if __name__ == '__main__':
         o.addChild(p[0],p[1])
 
     print(o.totalNumberOfOrbits())
+    you = o.getPathForObj('YOU')
+    san = o.getPathForObj('SAN')
+
+    # print(you)
+    # print(san)
+
+    for i in range(len(you)):
+        if you[i] != san[i]:
+            you = you[i:-1]
+            san = san[i:-1]
+            break
+
+    # print(you)
+    # print(san)
+    print(len(you)+len(san))
