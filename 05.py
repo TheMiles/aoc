@@ -4,7 +4,9 @@ import argparse
 
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
-    parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
+    parser.add_argument('input', metavar='file', type=argparse.FileType('r'), nargs='?')
+    parser.add_argument('-d', '--direct', type=str)
+
 
     return parser.parse_args()
 
@@ -20,6 +22,10 @@ class CPU(object):
             2: [self.mul,3],
             3: [self.input,1],
             4: [self.output,1],
+            5: [self.jmptrue,2],
+            6: [self.jmpfalse,2],
+            7: [self.lt,3],
+            8: [self.eq,3],
             99:[self.hacf,0]
         }
 
@@ -28,8 +34,8 @@ class CPU(object):
             self.cycle()
 
     def cycle(self):
+        # print("PC {} mnemo {}".format(self.pc, self.getMnemo()))
         self.getFunctor()()
-        self.advance()
 
     def advance(self):
         self.pc += self.getParamLength()+1
@@ -77,12 +83,13 @@ class CPU(object):
         params = self.resolveParameters()
         adr    = self.getWriteAdress()
         self.memory[adr] = params[0] + params[1]
+        self.advance()
 
     def mul(self):
         params = self.resolveParameters()
         adr    = self.getWriteAdress()
         self.memory[adr] = params[0] * params[1]
-
+        self.advance()
 
     def hacf(self):
         self.halted = True
@@ -90,19 +97,49 @@ class CPU(object):
     def input(self):
         value = int(input("Input needed:"))
         self.memory[self.getWriteAdress()] = value
+        self.advance()
 
     def output(self):
         print("Output:",self.resolveParameters()[0])
+        self.advance()
+
+    def jmptrue(self):
+        params = self.resolveParameters()
+        if(params[0] != 0):
+            self.pc = params[1]
+        else:
+            self.advance()
+
+    def jmpfalse(self):
+        params = self.resolveParameters()
+        if(params[0] == 0):
+            self.pc = params[1]
+        else:
+            self.advance()
+
+    def lt(self):
+        params           = self.resolveParameters()
+        adr              = self.getWriteAdress()
+        self.memory[adr] = 1 if params[0]<params[1] else 0
+        self.advance()
+
+    def eq(self):
+        params           = self.resolveParameters()
+        adr              = self.getWriteAdress()
+        self.memory[adr] = 1 if params[0]==params[1] else 0
+        self.advance()
+
 
 
 if __name__ == '__main__':
     args = getArguments()
-    lines = list(filter(None, [ [ int(y) for y in x.strip().split(',')] for x in args.input.readlines() ] ))
+    lines = [args.direct] if args.direct else list(filter(None, [ x for x in args.input.readlines() ] ))
+    lines = [[ int(y) for y in x.strip().split(',')] for x in lines ]
 
     for p in lines:
 
-        print("Trying", p)
+        # print("Trying", p)
 
         c = CPU(p)
         c.run()
-        print(c.memory)
+        # print(c.memory)
