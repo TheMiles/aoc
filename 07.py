@@ -2,6 +2,7 @@
 
 import argparse
 import itertools
+from enum import Enum
 
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
@@ -31,10 +32,16 @@ class Fifo(object):
 
 class CPU(object):
 
+    class State(Enum):
+        Running = 1
+        Waiting = 2
+        Halted  = 3
+
+
     def __init__(self, memory, inBuffer=None, outBuffer=None):
         self.pc         = 0
-        self.halted     = False
-        self.memory     = memory
+        self.state      = CPU.State.Running
+        self.memory     = memory[:]
         self.inBuffer   = inBuffer
         self.outBuffer  = outBuffer
         self.operations = {
@@ -55,9 +62,21 @@ class CPU(object):
     def setOutputBuffer(b):
         self.outBuffer = b
 
+    def isRunning(self):
+        return self.state == CPU.State.Running
+
+    def isWaiting(self):
+        return self.state == CPU.State.Waiting
+
+    def isHalted(self):
+        return self.state == CPU.State.Halted
+
+
     def run(self):
-        while not self.halted:
+        while self.state != CPU.State.Halted:
             self.cycle()
+            if self.state != CPU.State.Running:
+                break
 
     def cycle(self):
         # print("PC {} mnemo {}".format(self.pc, self.getMnemo()))
@@ -118,13 +137,15 @@ class CPU(object):
         self.advance()
 
     def hacf(self):
-        self.halted = True
+        self.state = CPU.State.Halted
 
     def input(self):
         if self.inBuffer and not self.inBuffer.empty():
+            self.state = CPU.State.Running
             value = self.inBuffer.pop()
         else:
-            value = int(input("Input needed: "))
+            self.state = CPU.State.Waiting
+            return
         self.memory[self.getWriteAdress()] = value
         self.advance()
 
@@ -166,18 +187,20 @@ def runAmpCirc(program, sequence):
 
     numCPUs = len(sequence)
     pipes = [ Fifo(x) for x in sequence ]
-    pipes.append(Fifo()) # append 1 additional Fifo for output
     cpus  = []
-    for i in range(numCPUs):
+    for i in range(numCPUs-1):
         cpus.append(CPU(program, pipes[i], pipes[i+1]))
+    #last cpus output uses first cpus input
+    cpus.append(CPU(program,pipes[-1],pipes[0]))
 
-    # isert start value
+    # insert start value
     pipes[0].push(0)
 
-    for c in cpus:
-        c.run()
+    while not any([ c.isHalted() for c in cpus ]):
+        for c in cpus:
+            c.run()
 
-    return pipes[-1].pop()
+    return pipes[0].pop()
 
 
 
@@ -189,9 +212,9 @@ if __name__ == '__main__':
 
     for p in lines:
 
-        print("Trying", p)
+        # print("Trying", p)
 
-        sequences = list(itertools.permutations([0,1,2,3,4]))
+        sequences = list(itertools.permutations([5,6,7,8,9]))
 
         acValues  = [ runAmpCirc(p,s) for s in sequences ]
         maxAC     = max(acValues)
