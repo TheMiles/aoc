@@ -3,11 +3,14 @@
 import argparse
 import itertools
 from enum import Enum
+from termcolor import colored
 
 def getArguments():
     parser = argparse.ArgumentParser(description='Advent of code')
     parser.add_argument('input', metavar='file', type=argparse.FileType('r'), nargs='?')
     parser.add_argument('-d', '--direct', type=str)
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-s', '--stepmode', action='store_true')
 
 
     return parser.parse_args()
@@ -43,6 +46,8 @@ class CPU(object):
         self.state       = CPU.State.Running
         self.memory      = memory[:]
         self.relativeAdr = 0
+        self.verbose     = False
+        self.stepMode    = False
         self.inBuffer    = inBuffer
         self.outBuffer   = outBuffer
         self.operations  = {
@@ -88,6 +93,23 @@ class CPU(object):
     def isHalted(self):
         return self.state == CPU.State.Halted
 
+    def setVerbose(self, v):
+        self.verbose = v
+
+    def setStepMode(self, s=None):
+        self.stepMode = s
+
+    def printState(self):
+        if self.verbose:
+            paramStart = self.pc+1
+            paramEnd   = paramStart+self.getParamLength()
+            prefix     = self.memory[:self.pc]
+            inst       = colored(self.memory[self.pc],'red')
+            params     = colored(self.memory[paramStart:paramEnd],'green')
+            postfix    = self.memory[paramEnd:]
+            print("Mem: ", prefix, inst, params, postfix)
+            print("pc {} relativeAdr {} state {}".format(self.pc,self.relativeAdr, self.state))
+            print("Params {} resolved {}".format(self.getParameters(), self.resolveParameters()))
 
     def run(self):
         while self.state != CPU.State.Halted:
@@ -96,7 +118,8 @@ class CPU(object):
                 break
 
     def cycle(self):
-        # print("PC {} mnemo {}".format(self.pc, self.getMnemo()))
+        self.printState()
+        if self.stepMode: input("Enter for next step")
         self.getFunctor()()
 
     def advance(self):
@@ -226,5 +249,7 @@ if __name__ == '__main__':
         print("Trying", p)
 
         c = CPU(p)
+        c.setStepMode(args.stepmode)
+        c.setVerbose(args.verbose)
         c.run()
 
