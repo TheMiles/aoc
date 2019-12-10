@@ -59,7 +59,7 @@ class CPU(object):
             6: [self.jmpfalse,2],
             7: [self.lt,3],
             8: [self.eq,3],
-            9: [self.setRelAdr,1],
+            9: [self.addRelAdr,1],
             99:[self.hacf,0]
         }
 
@@ -75,7 +75,7 @@ class CPU(object):
 
         if adr < 0: raise IndexError("No read access with negative adresses")
         if adr >= len(self.memory): return 0
-        return self.memory[adr]
+        return int(self.memory[adr])
 
     def writeMem(self, adr, value):
         if adr < 0: raise IndexError("No write access with negative adresses")
@@ -112,7 +112,7 @@ class CPU(object):
                 print(",",m,end='')
             print("]")
             print("pc {} is '{}' relativeAdr {} state {}".format(self.pc, self.getFunctor().__name__, self.relativeAdr, self.state))
-            print("Params {} Mode {} resolved {}".format(self.getParameters(), self.getParameterMode(), self.resolveParameters()))
+            print("Params {} Mode {} resolvedAdress {} resolveParameters {}".format(self.getParameters(), self.getParameterMode(), self.resolveAdresses(), self.resolveParameters()))
 
     def run(self):
         while self.state != CPU.State.Halted:
@@ -162,20 +162,31 @@ class CPU(object):
         return self.readMem(adr)
 
 
-    def resolveParameters(self):
-        params = self.getParameters()
-        for i,pm in enumerate(zip(params,self.getParameterMode())):
+    def resolveAdresses(self):
+        adresses = self.getParameters()
+        for i,pm in enumerate(zip(adresses,self.getParameterMode())):
             if   pm[1] == 'p':
-                params[i] = self.readMem(pm[0])
+                adresses[i] = pm[0]
 
             elif pm[1] == 'r':
-                params[i] = self.relativeAdr + pm[0]
+                adresses[i] = self.relativeAdr + pm[0]
+
+            else:
+                adresses[i] = None
+        return adresses
+
+
+    def resolveParameters(self):
+        params   = self.getParameters()
+        adresses = self.resolveAdresses()
+        for i, pa in enumerate(zip(params,adresses)):
+            params[i] = self.readMem(pa[1]) if pa[1] is not None else pa[0]
 
         return params
 
     def getWriteAdress(self):
-        params = self.getParameters()
-        return params[-1]
+        adresses = self.resolveAdresses()
+        return adresses[-1]
 
     def add(self):
         params = self.resolveParameters()
@@ -196,6 +207,9 @@ class CPU(object):
         if self.inBuffer and not self.inBuffer.empty():
             self.state = CPU.State.Running
             value = self.inBuffer.pop()
+        elif self.inBuffer is None:
+            self.state = CPU.State.Running
+            value = input("Input: ")
         else:
             self.state = CPU.State.Waiting
             return
@@ -236,9 +250,9 @@ class CPU(object):
         self.writeMem(adr, 1 if params[0]==params[1] else 0)
         self.advance()
 
-    def setRelAdr(self):
-        params           = self.resolveParameters()
-        self.relativeAdr = params[0]
+    def addRelAdr(self):
+        params            = self.resolveParameters()
+        self.relativeAdr += params[0]
         self.advance()
 
 
