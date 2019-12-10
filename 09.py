@@ -103,13 +103,16 @@ class CPU(object):
         if self.verbose:
             paramStart = self.pc+1
             paramEnd   = paramStart+self.getParamLength()
-            prefix     = self.memory[:self.pc]
-            inst       = colored(self.memory[self.pc],'red')
-            params     = colored(self.memory[paramStart:paramEnd],'green')
-            postfix    = self.memory[paramEnd:]
-            print("Mem: ", prefix, inst, params, postfix)
-            print("pc {} relativeAdr {} state {}".format(self.pc,self.relativeAdr, self.state))
-            print("Params {} resolved {}".format(self.getParameters(), self.resolveParameters()))
+            memory     = self.memory[:self.pc]
+            memory.append(colored(self.memory[self.pc],'red'))
+            memory.extend([colored(m,'green') for m in self.memory[paramStart:paramEnd] ])
+            memory.extend(self.memory[paramEnd:])
+            print("Mem: [", memory[0], end='')
+            for m in memory[1:]:
+                print(",",m,end='')
+            print("]")
+            print("pc {} is '{}' relativeAdr {} state {}".format(self.pc, self.getFunctor().__name__, self.relativeAdr, self.state))
+            print("Params {} Mode {} resolved {}".format(self.getParameters(), self.getParameterMode(), self.resolveParameters()))
 
     def run(self):
         while self.state != CPU.State.Halted:
