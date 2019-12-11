@@ -32,6 +32,22 @@ def getAngle(a):
     return angle
 
 
+def getAsteroidInfo(a, asteroids):
+    remaining  = removeAsteroid(a,asteroids[:])
+    directions = defaultdict(lambda: [])
+
+    for o in remaining:
+        diff      = o-a
+        length    = getLength(diff)
+        dir       = getDirection(diff)
+        angle     = int(getAngle(diff)*1000000000000.0)
+
+        directions[angle].append((o,length,dir))
+
+    for d in directions:
+        sorted(directions[d], key=lambda l: l[1])
+
+    return directions
 
 if __name__ == '__main__':
     args = getArguments()
@@ -44,21 +60,23 @@ if __name__ == '__main__':
             if s=='#':
                 asteroids.append(np.array([x,y]))
 
-    results = []
-    for a in asteroids:
-        remaining  = removeAsteroid(a,asteroids[:])
-        directions = defaultdict(lambda: [])
+    results = [ len(getAsteroidInfo(a,asteroids)) for a in asteroids ]
 
-        for o in remaining:
-            diff      = o-a
-            length    = getLength(diff)
-            dir       = getDirection(diff)
-            angle     = int(getAngle(diff)*1000000000000.0)
-
-            directions[angle].append((o,length,dir))
-
-        results.append(len(directions))
-
-    # print(directions)
     i = results.index(max(results))
     print(asteroids[i], results[i])
+
+    d = getAsteroidInfo(asteroids[i], asteroids)
+
+    count = 0
+    while count < 200:
+        for a in sorted(d.keys()):
+            if d[a]:
+                count += 1
+                if count == 200:
+                    result = d[a][0][0]
+                    print(result[0]*100+result[1])
+                    print(d[a][0])
+
+                d[a].pop()
+
+
