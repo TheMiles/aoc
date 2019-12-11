@@ -2,6 +2,7 @@
 
 import argparse
 import numpy as np
+from collections import defaultdict
 
 
 def getArguments():
@@ -16,6 +17,21 @@ def removeAsteroid(remove, asteroids):
         asteroids.pop(found.index(True))
     return asteroids
 
+def getLength(a):
+    return np.linalg.norm(a)
+
+def getDirection(a):
+    return a / getLength(a)
+
+def getAngle(a):
+    dir   = getDirection(a)
+    inner = np.inner(np.array([0,-1]),dir)
+    angle = np.arccos(inner)
+    if a[0] < 0:
+        angle = 2*np.pi - angle
+    return angle
+
+
 
 if __name__ == '__main__':
     args = getArguments()
@@ -28,33 +44,21 @@ if __name__ == '__main__':
             if s=='#':
                 asteroids.append(np.array([x,y]))
 
-    # size = np.amax(np.array(asteroids),0)
-    # print(size)
-
     results = []
-    count   = 0
     for a in asteroids:
-        remaining = asteroids[:]
-        remaining = removeAsteroid(a,remaining)
-        for o in remaining[:]:
-            diff_o   = o-a
-            length_o = np.linalg.norm(diff_o)
-            dir_o    = diff_o / length_o
+        remaining  = removeAsteroid(a,asteroids[:])
+        directions = defaultdict(lambda: [])
 
-            for p in remaining[:]:
-                if all(np.equal(o,p)): continue
+        for o in remaining:
+            diff      = o-a
+            length    = getLength(diff)
+            dir       = getDirection(diff)
+            angle     = int(getAngle(diff)*1000000000000.0)
 
-                diff_p   = p-a
-                length_p = np.linalg.norm(diff_p)
-                dir_p    = diff_p / length_p
+            directions[angle].append((o,length,dir))
 
-                if np.allclose(dir_p,dir_o) and length_p > length_o:
-                    remaining = removeAsteroid(p,remaining)
+        results.append(len(directions))
 
-
-        count += 1
-        # print("{}%".format(int(100*(count/len(asteroids)))))
-        results.append(len(remaining))
-
+    # print(directions)
     i = results.index(max(results))
     print(asteroids[i], results[i])
