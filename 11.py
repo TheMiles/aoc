@@ -4,6 +4,7 @@ import argparse
 import intcode as ic
 from collections import defaultdict
 import numpy as np
+from PIL import Image
 
 
 def getArguments():
@@ -72,12 +73,34 @@ if __name__ == '__main__':
         # print("Trying", p)
 
         hull = defaultdict(lambda: defaultdict(lambda:0))
+        hull[0][0]=1
         robot = Robot(p, hull)
 
         robot.run()
 
-        sum = 0
+        xDims = [min(hull.keys()),max(hull.keys())]
+        yDims = [1000000,-10000000]
+        sum   = 0
         for r in hull:
+            minimum = min(hull[r])
+            maximum = max(hull[r])
+            if minimum < yDims[0]: yDims[0] = minimum
+            if maximum > yDims[1]: yDims[1] = maximum
             sum += len(hull[r])
-        print(sum)
+        print("sum is",sum)
+
+
+        xOffset = -1 * xDims[0]
+        yOffset = -1 * yDims[0]
+
+        print(xDims, yDims, xOffset, yOffset)
+        image = np.zeros((yDims[1]-yDims[0]+1, xDims[1]-xDims[0]+1), dtype=np.uint8)
+        for c in hull:
+            for r in hull[c]:
+                v = hull[c][r]
+                image[r+yOffset][c+xOffset]=v
+
+        im = Image.fromarray(np.uint8(image*255),'L')
+        im.show()
+
 
