@@ -20,6 +20,9 @@ class Fifo(object):
     def empty(self):
         return len(self.buffer) == 0
 
+    def reset(self):
+        self.buffer = []
+
 
 class CPU(object):
 
