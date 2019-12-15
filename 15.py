@@ -4,6 +4,7 @@ import argparse
 import intcode as ic
 from collections import defaultdict
 import numpy as np
+import curses
 
 
 def getArguments():
@@ -12,9 +13,48 @@ def getArguments():
 
     return parser.parse_args()
 
+class _Getch:
+    """Gets a single character from standard input.  Does not echo to the screen."""
+    def __init__(self):
+        try:
+            self.impl = _GetchWindows()
+        except ImportError:
+            self.impl = _GetchUnix()
+
+    def __call__(self): return self.impl()
+
+
+class _GetchUnix:
+    def __init__(self):
+        import tty, sys
+
+    def __call__(self):
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+
+class _GetchWindows:
+    def __init__(self):
+        import msvcrt
+
+    def __call__(self):
+        import msvcrt
+        return msvcrt.getch()
+
+
+getch = _Getch()
+
+
 class Field(object):
 
-    def __init__(self):
+    def __init__(self, screen):
         self.content = {
             0: ' ',
             1: '#',
@@ -22,9 +62,10 @@ class Field(object):
             3: 'O'
         }
 
-        self.c      = np.array([[0]])
+        self.c      = np.array([[2]])
         self.offset = np.array([0,0])
         self.robot  = np.array([0,0])
+        self.screen = screen
 
 
     def setRobot(self, pos):
@@ -35,18 +76,16 @@ class Field(object):
             for x in range(self.c.shape[1]):
                 p = np.array([y,x])
                 if np.equal(self.robot, p).all():
-                    print('R',end='')
+                    self.screen.addstr(y,x,'R')
                 else:
-                    print(self.getContent(p), end='')
-            print()
-        print()
+                    self.screen.addstr(y,x,self.getContent(p-self.offset))
+        self.screen.refresh()
 
 
     def getContent(self, pos):
         return self.content[self.getValue(pos)]
 
     def setContent(self, pos, content):
-        print("setContent", pos, content, self.c.shape)
         for key, value in self.content.items():
             if value == content:
                 self.setValue(pos,key)
@@ -55,54 +94,51 @@ class Field(object):
 
     def getValue(self, pos):
         p = pos+self.offset
-
-        if np.less(p,0).any() or np.greater_equal(p,self.c.shape).any: return 0
+        if np.less(p,0).any() or np.greater_equal(p,self.c.shape).any(): return 0
         return self.c[tuple(p)]
 
     def setValue(self, pos, value):
         p = pos+self.offset
 
-        print("setValue orig {} offset {} effective {} shape {} value {}".format(pos,self.offset,p,self.c.shape,value))
+        # print("setValue",p,pos,self.offset,self.c.shape)
+        if np.less(p,0).any() or np.greater_equal(p,self.c.shape).any:
+            self.growField(p)
+            p = pos+self.offset
+            # print("afterGrow",p,pos,self.offset,self.c.shape)
 
-        if np.less(p,0).any() or np.greater_equal(p,self.c.shape).any: self.growField(p)
         self.c[tuple(p)] = value
+        # print("field now",self.c)
 
     def growField(self,pos):
 
         height, width = self.c.shape
         if pos[1]<0:
-            print("Grow width before", self.c)
             d = abs(pos[1])
             self.c = np.concatenate((np.zeros(d*height,dtype=np.uint8).reshape(height,d),self.c),axis=1)
             width += d
             self.offset[1] += d
             self.robot[1] += d
         elif pos[1]>=width:
-            print("Grow width after", self.c)
             d = pos[1]-width+1
             self.c = np.concatenate((self.c,np.zeros(d*height,dtype=np.uint8).reshape(height,d)),axis=1)
             width += d
 
         if pos[0]<0:
-            print("Grow height before", self.c)
             d = abs(pos[0])
             self.c = np.concatenate((np.zeros(d*width,dtype=np.uint8).reshape(d,width),self.c),axis=0)
             height += d
             self.offset[0] += d
             self.robot[0] += d
-        elif pos[1]>=width:
-            print("Grow height after", self.c)
-            d = pos[1]-width+1
+        elif pos[0]>=height:
+            d = pos[0]-height+1
             self.c = np.concatenate((self.c,np.zeros(d*width,dtype=np.uint8).reshape(d,width)),axis=0)
             height += d
-
-        print("after grow",self.c.shape, self.c)
 
 
 
 class Robot(object):
 
-    def __init__(self, program):
+    def __init__(self, program, field):
         self.input  = ic.Fifo()
         self.output = ic.Fifo()
         self.cpu    = ic.CPU(program, self.input, self.output)
@@ -132,7 +168,7 @@ class Robot(object):
             'D': 'E',
         }
 
-        self.field  = Field()
+        self.field  = field
         self.pos    = np.array([0,0])
 
 
@@ -141,7 +177,7 @@ class Robot(object):
         self.cpu.run()
         result = self.output.pop()
 
-        print("From {} starting {}".format(self.pos, direction))
+        # print("From {} starting {}".format(self.pos, direction))
 
         nextPos = self.pos+self.deltaPos[direction]
         if result == 0:
@@ -149,33 +185,38 @@ class Robot(object):
         elif result == 1:
             self.field.setContent(nextPos,'.')
             self.pos = nextPos
-            self.Field.setRobot(self.pos)
+            self.field.setRobot(self.pos)
         elif result == 2:
             self.field.setContent(nextPos,'O')
             self.pos = nextPos
 
-        print(" result: {} new pos {}".format(result,self.pos))
+        # print(" result: {} new pos {}".format(result,self.pos))
 
 
     def run(self):
 
         while True:
             self.field.printField()
-            n = input("Where next: ")
+            n = getch()
             if n in self.keymap:
                 self.move(self.keymap[n])
             if n == 'q':
                 break
 
-
-
-if __name__ == '__main__':
+def main(stdscr):
     args = getArguments()
     lines = [[ int(y) for y in x.strip().split(',')] for x in list(filter(None, [ r for r in args.input.readlines() ] )) ]
 
+    curses.curs_set(0)
+    stdscr.clear()
+
     for p in lines:
 
-        robot = Robot(p)
+        field = Field(stdscr)
+        robot = Robot(p,field)
         robot.run()
 
 
+
+if __name__ == '__main__':
+    curses.wrapper(main)
