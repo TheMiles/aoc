@@ -96,4 +96,22 @@ if __name__ == '__main__':
         reactions[result].append(needed)
 
     r = RefinementUnit(reactions)
-    print(r.calculateAmountsFor(1,'FUEL'))
+    needed = r.calculateAmountsFor(1,'FUEL')
+    print("For 1 FUEL I need {} ORE".format(needed))
+
+    increment = 1024
+    supply    = 1000000000000
+    current   = math.floor(supply/needed)
+
+    needed = r.calculateAmountsFor(current,'FUEL')
+    while True:
+        next   = current+increment
+        needed = r.calculateAmountsFor(next,'FUEL')
+
+        if needed>supply:
+            if increment==1: break
+            increment /= 2
+        else:
+            current = next
+
+    print("So I can produce {} FUEL".format(int(current)))
