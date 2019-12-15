@@ -190,6 +190,20 @@ class Robot(object):
         if not np.equal(current, self.pos).all():
             self.move(self.inverted[d])
 
+    def getExits(self):
+        self.lookAround()
+        exits = []
+        def checkExit(d):
+            v = self.field.getContent(self.pos+self.deltaPos[d])
+            if v == '.' or v == 'O':
+                exits.append(d)
+
+        checkExit('N')
+        checkExit('S')
+        checkExit('W')
+        checkExit('E')
+        return exits
+
 
     def move(self, direction):
         self.input.push(self.directions[direction])
@@ -217,6 +231,8 @@ class Robot(object):
         while True:
             self.lookAround()
             self.field.printField()
+            e = self.getExits()
+            print(e)
             n = getch()
             if n in self.keymap:
                 self.move(self.keymap[n])
