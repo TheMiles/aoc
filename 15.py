@@ -149,6 +149,12 @@ class Robot(object):
             'W': 3,
             'E': 4
         }
+        self.inverted = {
+            'N': 'S',
+            'S': 'N',
+            'W': 'E',
+            'E': 'W'
+        }
 
         self.deltaPos = {
             'N': np.array([-1, 0]),
@@ -170,6 +176,19 @@ class Robot(object):
 
         self.field  = field
         self.pos    = np.array([0,0])
+
+    def lookAround(self):
+        self.lookDir('N')
+        self.lookDir('S')
+        self.lookDir('W')
+        self.lookDir('E')
+
+    def lookDir(self,d):
+        current = self.pos
+
+        self.move(d)
+        if not np.equal(current, self.pos).all():
+            self.move(self.inverted[d])
 
 
     def move(self, direction):
@@ -196,6 +215,7 @@ class Robot(object):
     def run(self):
 
         while True:
+            self.lookAround()
             self.field.printField()
             n = getch()
             if n in self.keymap:
