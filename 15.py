@@ -176,6 +176,7 @@ class Robot(object):
 
         self.field  = field
         self.pos    = np.array([0,0])
+        self.decisions = {}
 
     def lookAround(self):
         self.lookDir('N')
@@ -204,6 +205,13 @@ class Robot(object):
         checkExit('E')
         return exits
 
+    def getDecisionsLeft(self):
+
+        p = self.pos[0]*1000+self.pos[1]
+        if p not in self.decisions:
+            self.decisions[p] = self.getExits()
+
+        return self.decisions[p]
 
     def move(self, direction):
         self.input.push(self.directions[direction])
@@ -228,16 +236,31 @@ class Robot(object):
 
     def run(self):
 
+        backtrack = []
         while True:
             self.lookAround()
             self.field.printField()
-            e = self.getExits()
-            print(e)
-            n = getch()
-            if n in self.keymap:
-                self.move(self.keymap[n])
-            if n == 'q':
+
+            d = self.getDecisionsLeft()
+            if d:
+                n = d.pop()
+                self.move(n)
+                backtrack.append(self.inverted[n])
+                r = self.getDecisionsLeft()
+                r.remove(self.inverted[n])
+            else:
+                n = backtrack.pop(-1)
+                self.move(n)
+
+            if not backtrack:
                 break
+
+            # e = self.getExits()
+            # n = getch()
+            # if n in self.keymap:
+            #     self.move(self.keymap[n])
+            # if n == 'q':
+            #     break
 
 def main(stdscr):
     args = getArguments()
