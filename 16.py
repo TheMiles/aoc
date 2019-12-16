@@ -15,10 +15,17 @@ def applyFFT(a, iterations):
     array = np.array(a)
 
     for i in range(iterations):
-        pattern = np.array(range(len(array)*2), dtype=np.uint8)
-        pattern = np.array(list(map(lambda x: int(x/(i+1))%len(base), pattern )))
+        length       = len(array)
+        next = array.copy()
+        for j in range(len(array)):
+            patternIndex = np.array(range(1,length+1))
+            patternIndex = np.array(list(map(lambda x: int(x/(j+1))%len(base), patternIndex )))
+            pattern      = np.array([base[n] for n in patternIndex])
+            next[j] = abs(np.inner(array, pattern))%10
+        array=next
+    return [ int(i) for i in array ]
 
-        print(pattern)
+
 
 
 
@@ -28,10 +35,10 @@ def main():
     lines = [[int(n)  for n in filter(lambda x: x.isdigit(),list(x))] for x in filter(None, args.input.readlines()) ]
 
     for p in lines:
-        applyFFT(p, args.iterations)
-        # print(p)
+        result = applyFFT(p, args.iterations)
+        firstEight = "".join([ str(x) for x in result[:8]])
+        print(result, firstEight)
 
-        break
 
 if __name__ == '__main__':
     main()
