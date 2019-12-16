@@ -81,6 +81,29 @@ class Field(object):
                     self.screen.addstr(y,x,self.getContent(p-self.offset))
         self.screen.refresh()
 
+    def getAdjacentContent(self, pos):
+        adj = [
+            np.array([-1, 0]),
+            np.array([ 1, 0]),
+            np.array([ 0,-1]),
+            np.array([ 0, 1])
+        ]
+
+        result = []
+        for a in adj:
+            nextPos = pos+a
+            result.append((nextPos, self.getContent(nextPos)))
+
+        return result
+
+    def countContent(self, content):
+        c = 0
+        for key, value in self.content.items():
+            if value == content:
+                c = key
+
+        return len(list(filter(lambda x:c==x, self.c.flatten())))
+
 
     def getContent(self, pos):
         return self.content[self.getValue(pos)]
@@ -254,20 +277,8 @@ class Robot(object):
                 n = backtrack.pop(-1)
                 self.move(n)
 
-            if self.field.getContent(self.pos) == 'O':
-                print(len(backtrack))
-                break
-
             if not backtrack:
                 break
-
-        n = getch()
-            # e = self.getExits()
-            # n = getch()
-            # if n in self.keymap:
-            #     self.move(self.keymap[n])
-            # if n == 'q':
-            #     break
 
 def main(stdscr):
     args = getArguments()
@@ -281,6 +292,25 @@ def main(stdscr):
         field = Field(stdscr)
         robot = Robot(p,field)
         robot.run()
+
+        l= [robot.oxygen]
+        i = 0
+        while field.countContent('.') > 0:
+            nextL = []
+            for o in l:
+                r = field.getAdjacentContent(o)
+                for k in r:
+                    if k[1]=='.':
+                        nextL.append(k[0])
+                        field.setContent(k[0],'O')
+            l = nextL
+            i += 1
+            field.printField()
+        stdscr.addstr(curses.LINES-5,3, "There are {} iterations".format(i))
+        stdscr.refresh()
+        getch()
+
+
 
 
 
