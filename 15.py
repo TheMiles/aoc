@@ -176,6 +176,7 @@ class Robot(object):
 
         self.field  = field
         self.pos    = np.array([0,0])
+        self.oxygen = np.array([0,0])
         self.decisions = {}
 
     def lookAround(self):
@@ -229,6 +230,7 @@ class Robot(object):
             self.field.setRobot(self.pos)
         elif result == 2:
             self.field.setContent(nextPos,'O')
+            self.oxygen = nextPos
             self.pos = nextPos
 
         # print(" result: {} new pos {}".format(result,self.pos))
@@ -252,9 +254,14 @@ class Robot(object):
                 n = backtrack.pop(-1)
                 self.move(n)
 
+            if self.field.getContent(self.pos) == 'O':
+                print(len(backtrack))
+                break
+
             if not backtrack:
                 break
 
+        n = getch()
             # e = self.getExits()
             # n = getch()
             # if n in self.keymap:
