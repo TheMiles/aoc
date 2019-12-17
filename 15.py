@@ -6,7 +6,7 @@ from collections import defaultdict
 import numpy as np
 import curses
 from utils.getch import getch
-from utils.fields import Field
+from utils.fields import ContentField
 
 
 def getArguments():
@@ -16,10 +16,10 @@ def getArguments():
     return parser.parse_args()
 
 
-class ScreenField(Field):
+class ScreenField(ContentField):
 
     def __init__(self, screen):
-        Field.__init__(self)
+        ContentField.__init__(self, [' ', '#', '.', 'O'])
         self.screen = screen
 
 

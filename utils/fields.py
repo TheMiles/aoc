@@ -32,7 +32,7 @@ class Field(object):
             l.append(c)
         return l
 
-    def getAdjacentContent(self, pos):
+    def getAdjacentValues(self, pos):
         adj = [
             np.array([-1, 0]),
             np.array([ 1, 0]),
@@ -43,27 +43,9 @@ class Field(object):
         result = []
         for a in adj:
             nextPos = pos+a
-            result.append((nextPos, self.getContent(nextPos)))
+            result.append((nextPos, self.getValue(nextPos)))
 
         return result
-
-    def countContent(self, content):
-        c = 0
-        for key, value in self.content.items():
-            if value == content:
-                c = key
-
-        return len(list(filter(lambda x:c==x, self.c.flatten())))
-
-
-    def getContent(self, pos):
-        return self.content[self.getValue(pos)]
-
-    def setContent(self, pos, content):
-        for key, value in self.content.items():
-            if value == content:
-                self.setValue(pos,key)
-                return
 
 
     def getValue(self, pos):
@@ -111,4 +93,28 @@ class Field(object):
 
 class ContentField(Field):
         def __init__(self,content):
-            pass
+            Field.__init__(self)
+            self.content = content
+
+        def convertContentToValue(self, c):
+            value = None
+            if c in self.content:
+                value = self.content.index(c)
+            return value
+
+        def countContent(self, c):
+            v = self.convertContentToValue(c)
+            return len(list(filter(lambda x:v==x, self.c.flatten())))
+
+
+        def getContent(self, pos):
+            return self.content[self.getValue(pos)]
+
+        def setContent(self, pos, content):
+            v = self.convertContentToValue(content)
+            if v is not None:
+                self.setValue(pos,v)
+
+        def getAdjacentContent(self, pos):
+            return [ (v[0],self.content[v[1]]) for v in self.getAdjacentValues(pos) ]
+
