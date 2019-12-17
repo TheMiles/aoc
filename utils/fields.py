@@ -5,19 +5,15 @@ import numpy as np
 class Field(object):
 
     def __init__(self):
-        self.content = {
-            0: ' ',
-            1: '#',
-            2: '.',
-            3: 'O'
-        }
-
         self.c      = np.array([[2]])
         self.offset = np.array([0,0])
-        self.robot  = np.array([0,0])
+        self.track  = {}
 
-    def setRobot(self, pos):
-        self.robot = pos+self.offset
+    def setTrackedPosition(self, name, pos):
+        self.track[name] = pos+self.offset
+
+    def getTrackedPosition(self, name):
+        return self.track[name]
 
     def getStringList(self):
         l = []
@@ -25,10 +21,7 @@ class Field(object):
             c = []
             for x in range(self.c.shape[1]):
                 p = np.array([y,x])
-                if np.equal(self.robot, p).all():
-                    c.append('R')
-                else:
-                    c.append(self.getContent(p-self.offset))
+                c.append(self.getContent(p-self.offset))
             l.append(c)
         return l
 
@@ -47,6 +40,8 @@ class Field(object):
 
         return result
 
+    def getContent(self, pos):
+        return self.getValue(pos)
 
     def getValue(self, pos):
         p = pos+self.offset
@@ -73,7 +68,8 @@ class Field(object):
             self.c = np.concatenate((np.zeros(d*height,dtype=np.uint8).reshape(height,d),self.c),axis=1)
             width += d
             self.offset[1] += d
-            self.robot[1] += d
+            for t in self.track.values():
+                t[1] += d
         elif pos[1]>=width:
             d = pos[1]-width+1
             self.c = np.concatenate((self.c,np.zeros(d*height,dtype=np.uint8).reshape(height,d)),axis=1)
@@ -84,7 +80,8 @@ class Field(object):
             self.c = np.concatenate((np.zeros(d*width,dtype=np.uint8).reshape(d,width),self.c),axis=0)
             height += d
             self.offset[0] += d
-            self.robot[0] += d
+            for t in self.track.values():
+                t[0] += d
         elif pos[0]>=height:
             d = pos[0]-height+1
             self.c = np.concatenate((self.c,np.zeros(d*width,dtype=np.uint8).reshape(d,width)),axis=0)

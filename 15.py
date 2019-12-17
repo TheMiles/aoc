@@ -21,10 +21,13 @@ class ScreenField(ContentField):
     def __init__(self, screen):
         ContentField.__init__(self, [' ', '#', '.', 'O'])
         self.screen = screen
+        self.setTrackedPosition('robot',np.array([0,0]))
 
 
     def printField(self):
         l = self.getStringList()
+        r = self.getTrackedPosition('robot')
+        l[r[0]][r[1]] = 'R'
         for y,r in enumerate(l):
             self.screen.addstr(y,0,"".join(r))
         self.screen.refresh()
@@ -121,7 +124,7 @@ class Robot(object):
         elif result == 1:
             self.field.setContent(nextPos,'.')
             self.pos = nextPos
-            self.field.setRobot(self.pos)
+            self.field.setTrackedPosition('robot', self.pos)
         elif result == 2:
             self.field.setContent(nextPos,'O')
             self.oxygen = nextPos
@@ -180,10 +183,6 @@ def main(stdscr):
         stdscr.addstr(curses.LINES-5,3, "There are {} iterations".format(i))
         stdscr.refresh()
         getch()
-
-
-
-
 
 if __name__ == '__main__':
     curses.wrapper(main)
