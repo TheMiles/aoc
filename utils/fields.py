@@ -40,6 +40,12 @@ class Field(object):
 
         return result
 
+    def getWidth(self):
+        return self.c.shape[1]
+
+    def getHeight(self):
+        return self.c.shape[0]
+
     def getContent(self, pos):
         return self.getValue(pos)
 
