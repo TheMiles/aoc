@@ -8,13 +8,6 @@ def getArguments():
     parser.add_argument('input', metavar='file', type=argparse.FileType('r'))
     return parser.parse_args()
 
-available_cubes = {
-    'red': 12,
-    'green': 13, 
-    'blue': 14
-}
-
-
 if __name__ == '__main__':
     args = getArguments()
     lines = list(filter(None, [ x.strip() for x in args.input.readlines() ] ))
@@ -35,12 +28,14 @@ if __name__ == '__main__':
             draw_list.append(cube_dict)
         games[int(id)] = draw_list
 
-    valid_games = []
+    needed_cubes = []
     for id, game in games.items():
-        valid = True
+        needed_cube = { 'red': 0, 'green': 0, 'blue': 0 }
+        needed_cubes.append(needed_cube)
         for g in game:
             for color, number in g.items():
-                if number > available_cubes[color]: valid = False
-        if valid: valid_games.append(id)
+                if number > needed_cube[color]: needed_cube[color] = number
 
-    print(sum(valid_games))
+    power_cubes = [ n['red']*n['green']*n['blue'] for n in needed_cubes ]
+    # print(power_cubes)
+    print(sum(power_cubes))
